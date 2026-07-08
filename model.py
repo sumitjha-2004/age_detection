@@ -16,14 +16,15 @@ def load_model():
 
     model.fc = nn.Sequential(
         nn.Dropout(0.5),
-        nn.Linear(model.fc.in_features,5)
+        nn.Linear(model.fc.in_features, 5)
     )
 
-    model = torch.load(
+    state_dict = torch.load(
         "age_classifier.pth",
         map_location="cpu",
-        weights_only=False
+        weights_only=True
     )
+    model.load_state_dict(state_dict)
 
     model.eval()
     return model
