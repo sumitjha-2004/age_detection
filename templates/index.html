@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Age Group Detection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+<div class="grid-overlay" aria-hidden="true"></div>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="masthead__mark" aria-hidden="true">
+      <svg viewBox="0 0 40 40" width="34" height="34">
+        <rect x="2" y="2" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"/>
+        <rect x="28" y="2" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"/>
+        <rect x="2" y="28" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"/>
+        <rect x="28" y="28" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="20" cy="20" r="5" fill="currentColor"/>
+      </svg>
+    </div>
+    <div class="masthead__text">
+      <p class="eyebrow">Computer Vision Demo</p>
+      <h1>Age Group Detection</h1>
+    </div>
+    <div class="masthead__status">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusLabel">Awaiting image</span>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <!-- LEFT: capture / viewfinder -->
+    <section class="panel viewfinder-panel" aria-labelledby="uploadHeading">
+      <h2 id="uploadHeading" class="panel__title">01 — Capture</h2>
+      <p class="panel__hint">Upload a clear, front-facing photo. One face per frame works best.</p>
+
+      <label for="fileInput" class="viewfinder" id="viewfinder">
+        <div class="viewfinder__corner tl"></div>
+        <div class="viewfinder__corner tr"></div>
+        <div class="viewfinder__corner bl"></div>
+        <div class="viewfinder__corner br"></div>
+        <div class="viewfinder__scanline" id="scanline"></div>
+
+        <img id="preview" class="viewfinder__image" alt="" />
+
+        <div class="viewfinder__empty" id="viewfinderEmpty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+            <path d="M12 15a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M3 8.5A2.5 2.5 0 015.5 6H8l1.2-1.8A2 2 0 0110.8 3.4h2.4a2 2 0 011.6.8L16 6h2.5A2.5 2.5 0 0121 8.5v9A2.5 2.5 0 0118.5 20h-13A2.5 2.5 0 013 17.5v-9z" stroke="currentColor" stroke-width="1.4"/>
+          </svg>
+          <span>No image loaded</span>
+        </div>
+      </label>
+
+      <input type="file" id="fileInput" accept="image/*" hidden />
+
+      <div class="control-row">
+        <button type="button" class="btn btn--ghost" id="chooseBtn">Choose photo</button>
+        <span class="file-name" id="fileName">No file chosen</span>
+      </div>
+
+      <button type="button" class="btn btn--primary btn--full" id="predictBtn" disabled>
+        Run detection
+      </button>
+    </section>
+
+    <!-- RIGHT: readout -->
+    <section class="panel result-panel" aria-labelledby="resultHeading">
+      <h2 id="resultHeading" class="panel__title">02 — Readout</h2>
+      <p class="panel__hint">Predicted age bracket and model confidence appear here.</p>
+
+      <div class="result-display" id="resultDisplay">
+        <div class="result-display__idle" id="resultIdle">
+          <span class="idle-tick">--</span>
+          <p>Run detection to see a prediction</p>
+        </div>
+
+        <div class="result-display__content" id="resultContent" hidden>
+          <span class="result-label">Predicted bracket</span>
+          <span class="result-value" id="resultValue">21–30</span>
+
+          <div class="confidence">
+            <div class="confidence__row">
+              <span>Confidence</span>
+              <span class="mono" id="confidenceValue">0%</span>
+            </div>
+            <div class="confidence__track">
+              <div class="confidence__fill" id="confidenceFill"></div>
+            </div>
+          </div>
+
+          <ul class="distribution" id="distribution"></ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <span>Age Group Detection — a face-analysis demo</span>
+    <span class="dot-sep">·</span>
+    <span>Developed by Sumit Jha</span>
+  </footer>
+
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
