@@ -15,7 +15,10 @@ const confidenceFill = document.getElementById('confidenceFill');
 const confidenceValue = document.getElementById('confidenceValue');
 const distributionEl = document.getElementById('distribution');
 
-const BRACKETS = ['0-10', '11-20', '21-30', '31-40', '41-50', '51-60', '61+'];
+// Must match model.py's `classes` list exactly, in the same order
+const BRACKETS = ['0-2', '3-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', 'more than 70'];
+
+let selectedFile = null;
 
 chooseBtn.addEventListener('click', () => fileInput.click());
 
@@ -23,6 +26,7 @@ fileInput.addEventListener('change', () => {
   const file = fileInput.files[0];
   if (!file) return;
 
+  selectedFile = file;
   fileName.textContent = file.name;
 
   const reader = new FileReader();
@@ -40,49 +44,65 @@ fileInput.addEventListener('change', () => {
   resultIdle.hidden = false;
 });
 
-predictBtn.addEventListener('click', () => {
+predictBtn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+
   predictBtn.disabled = true;
   predictBtn.textContent = 'Analyzing…';
   scanline.classList.add('is-scanning');
   statusLabel.textContent = 'Scanning…';
 
-  // Simulated inference delay — swap this block for a real API call.
-  setTimeout(() => {
+  const formData = new FormData();
+  formData.append('image', selectedFile);
+
+  try {
+    const response = await fetch('/predict', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || `Server error (${response.status})`);
+    }
+
+    const data = await response.json();
+    renderResult(data);
+
+    statusDot.className = 'status-dot is-done';
+    statusLabel.textContent = 'Prediction ready';
+
+  } catch (err) {
+    statusLabel.textContent = 'Error — see console';
+    console.error('Prediction failed:', err);
+    alert(`Prediction failed: ${err.message}`);
+
+  } finally {
     scanline.classList.remove('is-scanning');
     predictBtn.disabled = false;
     predictBtn.textContent = 'Run detection';
-    statusDot.className = 'status-dot is-done';
-    statusLabel.textContent = 'Prediction ready';
-    renderResult();
-  }, 1200);
+  }
 });
 
-function renderResult(){
-  // Mock distribution — replace with real model output.
-  const topIndex = 2; // "21-30"
-  const raw = BRACKETS.map((_, i) => {
-    if (i === topIndex) return 40 + Math.random() * 15;
-    return Math.random() * 18;
-  });
-  const total = raw.reduce((a, b) => a + b, 0);
-  const pcts = raw.map(v => Math.round((v / total) * 100));
+function renderResult(data){
+  const { prediction, confidence, distribution } = data;
 
   resultIdle.hidden = true;
   resultContent.hidden = false;
-  resultValue.textContent = BRACKETS[topIndex];
+  resultValue.textContent = prediction;
 
-  const topPct = pcts[topIndex];
-  confidenceValue.textContent = `${topPct}%`;
-  requestAnimationFrame(() => { confidenceFill.style.width = `${topPct}%`; });
+  confidenceValue.textContent = `${confidence}%`;
+  requestAnimationFrame(() => { confidenceFill.style.width = `${confidence}%`; });
 
   distributionEl.innerHTML = '';
-  BRACKETS.forEach((label, i) => {
+  BRACKETS.forEach((label) => {
+    const pct = distribution[label] ?? 0;
     const li = document.createElement('li');
-    if (i === topIndex) li.classList.add('is-top');
+    if (label === prediction) li.classList.add('is-top');
     li.innerHTML = `
       <span>${label}</span>
-      <span class="bar"><span style="width:${pcts[i]}%"></span></span>
-      <span class="pct">${pcts[i]}%</span>
+      <span class="bar"><span style="width:${pct}%"></span></span>
+      <span class="pct">${pct}%</span>
     `;
     distributionEl.appendChild(li);
   });

@@ -18,15 +18,16 @@ transform = transforms.Compose([
 def predict(image):
 
     image = transform(image)
-
     image = image.unsqueeze(0)
 
     with torch.no_grad():
-
         output = model(image)
+        probability = torch.softmax(output, 1)[0]  # shape: (9,)
+        confidence, pred = torch.max(probability, 0)
 
-        probability = torch.softmax(output,1)
+    distribution = {
+        classes[i]: round(probability[i].item() * 100, 2)
+        for i in range(len(classes))
+    }
 
-        confidence, pred = torch.max(probability,1)
-
-    return classes[pred.item()], confidence.item()*100
+    return classes[pred.item()], confidence.item() * 100, distribution
